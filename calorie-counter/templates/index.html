@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie Counter</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <style>
+        /* 統一導航選單樣式 */
+        .navigation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .nav-link {
+            text-decoration: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 16px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .nav-link.active {
+            background: rgba(255,255,255,0.25);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        /* 首頁容器樣式 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 導航選單 -->
+        <nav class="navigation">
+            <div class="nav-links">
+                <a href="/" class="nav-link active">🏠 首頁</a>
+                <a href="/record" class="nav-link">📝 紀錄餐點</a>
+                <a href="/meals" class="nav-link">🍽️ 查看記錄</a>
+                <a href="/nutrition" class="nav-link">🏋️‍♂️ 營養建議</a>
+                <a href="/personalized-meals" class="nav-link">🍱 個人化餐點</a>
+            </div>
+        </nav>
+        
+        <h2>卡路里計算器</h2>
+        <p>上傳圖片來計算其卡路里</p>
+        <button id="upload"><img src="/static/images/camera.png" /></button>
+        <div id="calorie-count"></div>
+        <div id="spinner"></div>
+    </div>
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

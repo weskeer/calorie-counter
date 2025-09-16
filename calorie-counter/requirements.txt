@@ -1,0 +1,9 @@
+openai
+flask
+python-dotenv
+gunicron
+mysql-connector-python
+flask-sqlalchemy
+requests
+beautifulsoup4
+lxml

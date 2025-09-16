@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>餐點記錄</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* 統一導航選單樣式 */
+        .navigation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .nav-link {
+            text-decoration: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 16px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .nav-link.active {
+            background: rgba(255,255,255,0.25);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        /* 頁面容器樣式 */
+        body {
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .meals-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .meal-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .meal-date {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .meal-calories {
+            background: #4caf50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+        .foods-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .foods-table th,
+        .foods-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .foods-table th {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .no-records {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+        .load-more {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .load-more-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .load-more-btn:hover {
+            background: #1976D2;
+        }
+        .load-more-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- 導航選單 -->
+    <nav class="navigation">
+        <div class="nav-links">
+            <a href="/" class="nav-link">🏠 首頁</a>
+            <a href="/record" class="nav-link">📝 紀錄餐點</a>
+            <a href="/meals" class="nav-link active">🍽️ 查看記錄</a>
+            <a href="/nutrition" class="nav-link">🏋️‍♂️ 營養建議</a>
+            <a href="/personalized-meals" class="nav-link">🍱 個人化餐點</a>
+            
+        </div>
+    </nav>
+    
+    <div class="meals-container">
+        <h1>餐點記錄</h1>
+        <div id="message" class="message"></div>
+        <div id="meals-list"></div>
+        <div id="loading" class="loading" style="display: none;">載入中...</div>
+        <div id="load-more" class="load-more" style="display: none;">
+            <button id="load-more-btn" class="load-more-btn" onclick="loadMoreMeals()">載入更多</button>
+        </div>
+    </div>
+
+         <script>
+         // 頁面載入時自動聚焦到搜尋框（如果有的話）
+         window.addEventListener('DOMContentLoaded', function() {
+             const searchInput = document.querySelector('input[type="search"]');
+             if (searchInput) {
+                 searchInput.focus();
+             }
+         });
+         
+         let currentPage = 1;
+        let hasMore = true;
+        let isLoading = false;
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function deleteMeal(mealId) {
+            if (!confirm('確定要刪除這筆記錄嗎？')) {
+                return;
+            }
+
+            fetch(`/delete_meal/${mealId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    // 重新載入第一頁
+                    currentPage = 1;
+                    loadMeals(true);
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('刪除失敗，請稍後再試', 'error');
+                console.error('Error:', error);
+            });
+        }
+
+        function createMealCard(meal) {
+            const foodsHtml = meal.foods.map(food => 
+                `<tr><td>${food.name}</td><td>${food.calories} kcal</td></tr>`
+            ).join('');
+
+            return `
+                <div class="meal-card">
+                    <div class="meal-header">
+                        <div class="meal-date">${meal.date}</div>
+                        <div class="meal-calories">${meal.total_calories} kcal</div>
+                        <button class="delete-btn" onclick="deleteMeal(${meal.id})">刪除</button>
+                    </div>
+                    <table class="foods-table">
+                        <thead>
+                            <tr>
+                                <th>食物名稱</th>
+                                <th>卡路里</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${foodsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function loadMeals(reset = false) {
+            if (isLoading) return;
+            
+            isLoading = true;
+            const loadingDiv = document.getElementById('loading');
+            const mealsListDiv = document.getElementById('meals-list');
+            
+            if (reset) {
+                mealsListDiv.innerHTML = '';
+                currentPage = 1;
+                hasMore = true;
+            }
+            
+            loadingDiv.style.display = 'block';
+
+            fetch(`/api/meals?page=${currentPage}&per_page=5`)
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+                
+                if (data.meals.length === 0 && currentPage === 1) {
+                    mealsListDiv.innerHTML = '<div class="no-records">目前沒有餐點記錄</div>';
+                    return;
+                }
+
+                const mealsHtml = data.meals.map(meal => createMealCard(meal)).join('');
+                
+                if (reset) {
+                    mealsListDiv.innerHTML = mealsHtml;
+                } else {
+                    mealsListDiv.innerHTML += mealsHtml;
+                }
+
+                hasMore = data.has_next;
+                const loadMoreDiv = document.getElementById('load-more');
+                const loadMoreBtn = document.getElementById('load-more-btn');
+                
+                if (hasMore) {
+                    loadMoreDiv.style.display = 'block';
+                    loadMoreBtn.disabled = false;
+                } else {
+                    loadMoreDiv.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                loadingDiv.style.display = 'none';
+                showMessage('載入失敗，請稍後再試', 'error');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                isLoading = false;
+            });
+        }
+
+        function loadMoreMeals() {
+            if (!hasMore || isLoading) return;
+            
+            currentPage++;
+            loadMeals();
+        }
+
+        // 頁面載入時載入第一頁
+        window.addEventListener('DOMContentLoaded', function() {
+            loadMeals(true);
+         });
+     </script>
+ </body>
+</html> 

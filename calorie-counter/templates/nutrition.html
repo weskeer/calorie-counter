@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健身營養建議 - 卡路里計算器</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* 統一導航選單樣式 */
+        .navigation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .nav-link {
+            text-decoration: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 16px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .nav-link.active {
+            background: rgba(255,255,255,0.25);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        /* 頁面背景樣式 */
+        body {
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            scroll-padding-top: 120px;
+        }
+        
+        /* 確保內容不被導航選單遮擋 */
+        .nutrition-container {
+            scroll-margin-top: 120px;
+        }
+        
+        .nutrition-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: 120px;
+            min-height: calc(100vh - 140px);
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        
+        /* 頁面標題樣式 */
+        h1 {
+            margin-top: 0;
+            margin-bottom: 30px;
+            color: #333;
+            text-align: center;
+            padding-top: 10px;
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            background: white;
+            padding: 10px 0;
+        }
+        
+        .category-tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .category-tab.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .tip-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #007bff;
+        }
+        
+        .tip-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .tip-content {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .tip-meta {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .search-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+        
+        /* 讓搜尋結果可滾動，避免擠壓其他內容 */
+        #search-results {
+            max-height: 50vh;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .search-btn {
+            padding: 12px 24px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .meal-suggestions {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* 由整個主要容器滾動，避免巢狀滾動 */
+        #tips-container {
+            max-height: none;
+            overflow: visible;
+            margin-top: 10px;
+        }
+        #meal-results {
+            max-height: none;
+            overflow: visible;
+            margin-top: 10px;
+        }
+        
+        .meal-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            margin-bottom: 30px;
+            align-items: end;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .suggest-btn {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .meal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .meal-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .meal-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .meal-suggestion {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .nutrition-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .nutrition-item {
+            text-align: center;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+        }
+        
+        .nutrition-value {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .nutrition-container {
+                margin: 5px;
+                padding: 10px;
+                margin-top: 100px;
+            }
+            
+            .meal-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .category-tabs {
+                gap: 5px;
+            }
+            
+            .category-tab {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            .tips-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nutrition-container {
+                margin: 2px;
+                padding: 8px;
+                margin-top: 90px;
+            }
+            
+            h1 {
+                font-size: 20px;
+                margin-bottom: 15px;
+            }
+            
+            .category-tabs {
+                gap: 3px;
+            }
+            
+            .category-tab {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .search-section,
+            .meal-suggestions {
+                padding: 15px;
+            }
+        }
+        
+        /* Compact view overrides for better use at 100% zoom */
+        .navigation {
+            padding: 12px 0;
+        }
+        .nutrition-container {
+            margin-top: 96px;
+            padding: 16px;
+        }
+        h1 {
+            margin-bottom: 15px;
+            padding-top: 0;
+        }
+        .category-tabs {
+            gap: 8px;
+            top: 0;
+            padding: 6px 0;
+        }
+        .category-tab {
+            padding: 8px 14px;
+            font-size: 14px;
+        }
+        .tips-grid {
+            gap: 12px;
+        }
+        .tip-card {
+            padding: 16px;
+        }
+        .tip-title {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .tip-content {
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        .search-section,
+        .meal-suggestions {
+            padding: 20px;
+        }
+        .meal-form {
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .meal-card {
+            padding: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nutrition-container">
+        <!-- 導航選單 -->
+        <nav class="navigation">
+            <div class="nav-links">
+                <a href="/" class="nav-link">🏠 首頁</a>
+                <a href="/record" class="nav-link">📝 紀錄餐點</a>
+                <a href="/meals" class="nav-link">🍽️ 查看記錄</a>
+                <a href="/nutrition" class="nav-link active">🏋️‍♂️ 營養建議</a>
+                <a href="/personalized-meals" class="nav-link">🍱 個人化餐點</a>
+            </div>
+        </nav>
+        
+        <h1>🏋️‍♂️ 健身營養建議</h1>
+        
+        <!-- 分類標籤 -->
+        <div class="category-tabs">
+            <button class="category-tab active" data-category="general">一般建議</button>
+            <button class="category-tab" data-category="weight_loss">減重營養</button>
+            <button class="category-tab" data-category="muscle_gain">增肌營養</button>
+            <button class="category-tab" data-category="endurance">耐力運動</button>
+        </div>
+        
+        <!-- 營養建議區域 -->
+        <div id="tips-container">
+            <div class="loading">載入中...</div>
+        </div>
+        
+        <!-- 搜尋區域 -->
+        <div class="search-section">
+            <h2>🔍 搜尋營養資訊</h2>
+            <div class="search-form">
+                <input type="text" id="search-input" class="search-input" placeholder="輸入關鍵字搜尋營養資訊...">
+                <button id="search-btn" class="search-btn">搜尋</button>
+            </div>
+            <div id="search-results"></div>
+        </div>
+
+    <script>
+        let currentCategory = 'general';
+        
+        // 載入營養建議
+        async function loadNutritionTips(category) {
+            const container = document.getElementById('tips-container');
+            container.innerHTML = '<div class="loading">載入中...</div>';
+            
+            try {
+                const response = await fetch(`/api/nutrition/tips?category=${category}`);
+                const data = await response.json();
+                
+                if (data.tips && data.tips.length > 0) {
+                    displayTips(data.tips);
+                } else {
+                    container.innerHTML = '<div class="error">沒有找到相關建議</div>';
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="error">載入失敗，請稍後再試</div>';
+                console.error('Error:', error);
+            }
+        }
+        
+        // 顯示營養建議
+        function displayTips(tips) {
+            const container = document.getElementById('tips-container');
+            const tipsHTML = tips.map(tip => `
+                <div class="tip-card">
+                    <div class="tip-title">${tip.title}</div>
+                    <div class="tip-content">${tip.content}</div>
+                    <div class="tip-meta">
+                        來源: ${tip.source} | 更新時間: ${new Date(tip.timestamp).toLocaleString('zh-TW')}
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = `<div class="tips-grid">${tipsHTML}</div>`;
+        }
+        
+        // 搜尋功能
+        async function searchNutrition(query) {
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = '<div class="loading">搜尋中...</div>';
+            
+            try {
+                const response = await fetch(`/api/nutrition/search?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    const resultsHTML = data.results.map(result => `
+                        <div class="tip-card">
+                            <div class="tip-title">${result.title}</div>
+                            <div class="tip-content">${result.content}</div>
+                            <div class="tip-meta">
+                                來源: ${result.source}${result.url ? ` | <a href="${result.url}" target="_blank" rel="noopener noreferrer">查看來源</a>` : ''} | 更新時間: ${new Date(result.timestamp).toLocaleString('zh-TW')}
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    resultsContainer.innerHTML = `<div class="tips-grid">${resultsHTML}</div>`;
+                } else {
+                    resultsContainer.innerHTML = '<div class="error">沒有找到相關結果</div>';
+                }
+            } catch (error) {
+                resultsContainer.innerHTML = '<div class="error">搜尋失敗，請稍後再試</div>';
+                console.error('Error:', error);
+            }
+        }
+        
+        // 事件監聽器
+        document.addEventListener('DOMContentLoaded', function() {
+            // 載入初始建議
+            loadNutritionTips(currentCategory);
+            
+            // 分類標籤點擊事件
+            document.querySelectorAll('button.category-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 更新活動狀態
+                    document.querySelectorAll('button.category-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 載入對應分類的建議
+                    const category = this.dataset.category;
+                    currentCategory = category;
+                    loadNutritionTips(category);
+                });
+            });
+            
+            // 搜尋按鈕點擊事件
+            document.getElementById('search-btn').addEventListener('click', function() {
+                const query = document.getElementById('search-input').value.trim();
+                if (query) {
+                    searchNutrition(query);
+                }
+            });
+            
+            // 搜尋輸入框回車事件
+            document.getElementById('search-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = this.value.trim();
+                    if (query) {
+                        searchNutrition(query);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
