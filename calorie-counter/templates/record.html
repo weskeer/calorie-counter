@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>紀錄這餐</title>
-    <link rel="stylesheet" href="/static/css/style.css">
     <style>
         /* 統一導航選單樣式 */
         .navigation {
@@ -57,6 +56,7 @@
             background: #f8f9fa;
             margin: 0;
             padding: 0;
+            margin-top: 100px; /* 導航列高度大概 80px，可調整 */
         }
         
         .container {
@@ -69,6 +69,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             margin-top: 20px;
+        
         }
         .calorie-box {
             width: 180px;
@@ -135,7 +136,7 @@
         </div>
     </nav>
     
-    <h1>紀錄這餐吃了什麼</h1>
+    
     <div class="container">
         <div class="calorie-box" id="total-calories-box">
             本餐總卡路里：<span id="total-calories">0</span> kcal
